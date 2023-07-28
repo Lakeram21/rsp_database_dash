@@ -1,0 +1,52 @@
+/* HomePage.css */
+
+.homePage {
+    background-color: #274b66;
+  }
+  
+  .homePage_inner {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .homePage_nav {
+    flex: 0.7;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start; /* Align content to the left */
+    border-right: 1px solid #e97423; /* Add a vertical line to the right */
+  }
+  
+  .homePage_info {
+    flex: 2;
+    padding: 20px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    
+  }
+  
+  /* Styles for the links in the navigation */
+  .homePage_link {
+    margin-bottom: 10px;
+    color: #e97423;
+    text-decoration: none;
+    font-size: 35px;
+    font-weight: 500;
+    /* border-bottom: 1px solid  #e97423; */
+  }
+  .homePage_link:hover {
+    color: orange; /* Change the color to orange on hover */
+  }
+
+  
+  /* Additional styles for the header */
+  .homePage_info h1 {
+    font-size: 34px;
+    margin-bottom: 20px;
+  }
+  
