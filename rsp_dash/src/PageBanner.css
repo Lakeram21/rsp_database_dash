@@ -1,13 +1,12 @@
-.priceMan_category{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-}
-
 .priceMan_nav{
     background-color: #274b66;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     color: #e97423;
+    align-items: center;
+}
+.priceMan_nav_link{
+    color: #e97423;
+    text-decoration: none;
 }

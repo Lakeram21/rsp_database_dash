@@ -7,8 +7,10 @@ import {
 
 import './App.css';
 import HomePage from './HomePage/HomePage';
-import PriceManagement from './PriceManagement/PriceManagement';
 import ExcelManagement from './ExcelManagement/ExcelManagement';
+import Chatgpt from './Chatgpt/Chatgpt';
+import ProductManagement from "./ProductManagement/ProductManagement"
+import Inventory from "./Inventory/Inventory"
 
 function App() {
   return (
@@ -17,7 +19,9 @@ function App() {
            <Routes>
                  <Route exact path='/' element={< HomePage />}></Route>
                  <Route exact path='/excelmanagement' element={< ExcelManagement />}></Route>
-                 <Route exact path='/pricemanagement' element={< PriceManagement/>}></Route>
+                 <Route exact path='/chatgptmanagement' element={< Chatgpt/>}></Route>
+                 <Route exact path='/productmanagement' element={< ProductManagement/>}></Route>
+                 <Route exact path='/inventory' element={<Inventory/>}></Route>
           </Routes>
           </div>
        </Router>

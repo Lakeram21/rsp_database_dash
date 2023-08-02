@@ -1,0 +1,23 @@
+
+.productMan_custom-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 0px;
+  
+}
+  
+.productMan_custom-list li {
+/* Optional: Add some margin or padding to adjust the space between list items if needed */
+margin-bottom: 0px;
+margin-top: 0px;
+text-decoration: underline;
+font-size: small;
+}
+
+.productMan_custom-list li:hover{
+/* Optional: Add some margin or padding to adjust the space between list items if needed */
+color: #e97423;
+cursor: pointer;
+}

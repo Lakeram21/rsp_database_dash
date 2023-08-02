@@ -1,0 +1,10 @@
+.productViewContainer {
+    overflow-x: auto;
+  }
+  
+  .productView_category {
+    display: inline-block;
+  }
+  
+  
+  

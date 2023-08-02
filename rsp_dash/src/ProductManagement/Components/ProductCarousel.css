@@ -1,0 +1,32 @@
+/* ProductCarousel.css */
+.product-item {
+    text-align: center;
+    position: relative; /* Add this line to make sure the container is positioned relatively */
+  }
+  
+  .product-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Add background color to the text container */
+    color: #fff;
+    padding: 10px; /* Add some padding to the text container */
+    width: 100%; /* Set the width of the text container to 100% */
+  }
+  
+  .product-info h3 {
+    margin: 0;
+  }
+  
+  .image-container {
+    width: 100%;
+    height: 250px; /* Adjust the height to your preference */
+    overflow: hidden;
+  }
+  
+  .image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
