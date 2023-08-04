@@ -1,52 +1,60 @@
-const express = require('express');
-const path = require('path');
-const sql = require('mssql');
+const express = require('express'),
+      dbOperations = require("./database/dbOperations"),
+      cors    = require("cors")
 
-const app = express();
-const PORT = process.env.PORT || 5000;
 
-// SQL Server database configuration
-const config = {
-  user: 'your_username',       // Your SQL Server username
-  password: 'your_password',   // Your SQL Server password
-  server: 'localhost',         // Your SQL Server instance (change if needed)
-  database: 'your_database',   // Your database name
-  options: {
-    enableArithAbort: true,
-  },
-};
+dbOperations.getAllProducts().then(response=>{
+  console.log(response)
+})
 
-// Serve static files from the "build" directory in your React app
-app.use(express.static(path.join(__dirname, 'build')));
+// const path = require('path');
+// const sql = require('mssql');
 
-// Define your server routes here, if needed
+// const app = express();
+// const PORT = process.env.PORT || 5000;
 
-// Example SQL query to retrieve data from the database
-app.get('/api/data', async (req, res) => {
-  try {
-    // Connect to the database
-    await sql.connect(config);
+// // SQL Server database configuration
+// const config = {
+//   user: 'your_username',       // Your SQL Server username
+//   password: 'your_password',   // Your SQL Server password
+//   server: 'localhost',         // Your SQL Server instance (change if needed)
+//   database: 'your_database',   // Your database name
+//   options: {
+//     enableArithAbort: true,
+//   },
+// };
 
-    // Query the database
-    const result = await sql.query('SELECT * FROM your_table');
+// // Serve static files from the "build" directory in your React app
+// app.use(express.static(path.join(__dirname, 'build')));
 
-    // Send the data as a JSON response
-    res.json(result.recordset);
-  } catch (error) {
-    console.error('Error executing SQL query:', error.message);
-    res.status(500).send('Server error');
-  } finally {
-    // Close the database connection
-    sql.close();
-  }
-});
+// // Define your server routes here, if needed
 
-// Catch-all route to serve the React app
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// // Example SQL query to retrieve data from the database
+// app.get('/api/data', async (req, res) => {
+//   try {
+//     // Connect to the database
+//     await sql.connect(config);
+
+//     // Query the database
+//     const result = await sql.query('SELECT * FROM your_table');
+
+//     // Send the data as a JSON response
+//     res.json(result.recordset);
+//   } catch (error) {
+//     console.error('Error executing SQL query:', error.message);
+//     res.status(500).send('Server error');
+//   } finally {
+//     // Close the database connection
+//     sql.close();
+//   }
 // });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// // Catch-all route to serve the React app
+// // app.get('*', (req, res) => {
+// //   res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// // });
+
+// // Start the server
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
