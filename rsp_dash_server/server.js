@@ -1,60 +1,60 @@
-const express = require('express'),
-      dbOperations = require("./database/dbOperations"),
-      cors    = require("cors")
+
+const express = require("express");
+const bodyparser = require("body-parser")
+const cors = require("cors");
+const app = express();
+const router = express.Router()
+const dbOperations = require('./database/dbOperations')
+
+// Hard Coded Middleware
+app.use(bodyparser.urlencoded({extended:true})) //The extended mode allows for parsing nested objects and arrays.
+app.use(bodyparser.json()) // It allows your application to handle JSON payloads sent in the request.
+app.use(cors()); //This middleware is used to enable Cross-Origin Resource Sharing (CORS), which allows web applications from different domains to make requests to your server
+app.use("/api", router) //his middleware is used to mount a specific router under a specific path prefix
 
 
-dbOperations.getAllProducts().then(response=>{
-  console.log(response)
+
+/********************************************
+ * Routes for all Endpoints
+****************/
+// This is your middleware and will be called before any other routes are hit
+// We can add auth here and parseing etc
+router.use((req, res, next)=>{
+  console.log("Middleware")
+  next()
 })
 
-// const path = require('path');
-// const sql = require('mssql');
+//>>>> Get a specific Product by Sku
+router.route("/product/:sku").get((req, res)=>{
 
-// const app = express();
-// const PORT = process.env.PORT || 5000;
+  // Gett the params
+  const sku = req.params.sku
+  
+  if (!sku) {
+    return res.status(400).json({ error: 'SKU parameter is missing.' });
+  }
+  dbOperations.getAllProducts(sku).then(result =>{
+    res.json(result)
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).json({ error: 'An error occurred while fetching products.' });
+  })
+})
 
-// // SQL Server database configuration
-// const config = {
-//   user: 'your_username',       // Your SQL Server username
-//   password: 'your_password',   // Your SQL Server password
-//   server: 'localhost',         // Your SQL Server instance (change if needed)
-//   database: 'your_database',   // Your database name
-//   options: {
-//     enableArithAbort: true,
-//   },
-// };
 
-// // Serve static files from the "build" directory in your React app
-// app.use(express.static(path.join(__dirname, 'build')));
 
-// // Define your server routes here, if needed
 
-// // Example SQL query to retrieve data from the database
-// app.get('/api/data', async (req, res) => {
-//   try {
-//     // Connect to the database
-//     await sql.connect(config);
 
-//     // Query the database
-//     const result = await sql.query('SELECT * FROM your_table');
 
-//     // Send the data as a JSON response
-//     res.json(result.recordset);
-//   } catch (error) {
-//     console.error('Error executing SQL query:', error.message);
-//     res.status(500).send('Server error');
-//   } finally {
-//     // Close the database connection
-//     sql.close();
-//   }
-// });
 
-// // Catch-all route to serve the React app
-// // app.get('*', (req, res) => {
-// //   res.sendFile(path.join(__dirname, 'build', 'index.html'));
-// // });
+/***********************
+ * Starting the server 
+ *********************/
 
-// // Start the server
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
+// set port, listen for requests
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`RSP Server is running on port ${PORT}.`);
+});
+
+

@@ -4,7 +4,7 @@ import {
 } from 'react-router-dom';
 import "./ProductManagement.css"
 import PageBanner from '../PageBanner';
-import ProductView from './Components/ProductView';
+import SingleProductManangement from './Components/SingleProductmanagement';
 import ProductCarousel from './Components/ProductCarousel';
 import FilterManagement from './Components/FilterManagement';
 import ImageManagement from './Components/ImageManagement';
@@ -17,7 +17,7 @@ function ProductManagement() {
          <div className='productMan_category'>
           <ul class="productMan_custom-list">
               <li>
-                <h2 onClick={()=>{setSelect("View")}}>Single Product Management</h2>
+                <h2 onClick={()=>{setSelect("SingleProductManangement")}}>Single Product Management</h2>
               </li>
               <li>
                 <h2 onClick={()=>{setSelect("Filter")}}>Filter Management</h2>
@@ -28,10 +28,10 @@ function ProductManagement() {
          <hr/>
          <div>
           {
-          select == "View"?<ProductView/>:
+          select == "SingleProductManangement"?<SingleProductManangement/>:
           select == "Filter"?<FilterManagement/>:
           select == "Image"?<ImageManagement/>:
-          <ProductView/>}
+          <SingleProductManangement/>}
          </div>
          
     </div>

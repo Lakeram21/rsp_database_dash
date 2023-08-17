@@ -80,17 +80,17 @@ function ExcelManagement() {
               ))}
             </select>
           </div>
+          
           <div className='excelMan_category'>
-          <h2>Product Category</h2>
-          <select value={selectedProductCategory} onChange={(e) => setSelectedProductCategory(e.target.value)}>
-            <option value="">Select Product Category</option>
-            {productCategories.map((category, index) => (
-              <option key={index} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-
+            <h2>Product Category</h2>
+            <select value={selectedProductCategory} onChange={(e) => setSelectedProductCategory(e.target.value)}>
+              <option value="">Select Product Category</option>
+              {productCategories.map((category, index) => (
+                <option key={index} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
           </div>
           <div className='excelMan_category_button'>
             <button>Search</button>

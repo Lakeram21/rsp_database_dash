@@ -1,0 +1,196 @@
+/* Styling for the product view container */
+.productViewContainer {
+  margin: 20px;
+}
+
+/* Styling for the product view category */
+.productView_category {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+/* Styling for the table headers */
+.tableRow {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+  font-weight: bold;
+  
+}
+
+.tableRow .tableData{
+  font-weight: 400;
+  width: 90px;
+}
+
+.tableHeader, .tableData {
+  flex: 1;
+  padding: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Hover effect for expanding on click */
+.tableData:hover {
+  white-space: normal;
+  overflow: visible;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+/* Additional styling for expanded content */
+.expandedContent {
+  white-space: normal;
+  overflow: visible;
+  background-color: #f0f0f0;
+  padding: 8px;
+}
+
+.prodViewMan_category input{
+  padding: 10px;
+
+}
+.prodViewMan_category{
+  padding-left: 35px;
+}
+.prodViewMan_container {
+  display: flex;
+
+}
+
+/* .prodViewMan_category {
+  display: flex;
+  flex-direction: column;
+  margin-right: 20px;
+  margin-left: 30px;
+} */
+
+.prodViewMan_category_button{
+  display: flex;
+  flex-direction: column;
+  margin-right: 20px;
+  margin-left: 30px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  
+  
+}
+.prodViewMan_category_button button{
+  width: 200px; /* Adjust the width as needed */
+  padding: 10px;
+  color: white;
+  font-weight: 600;
+  background-color:  #e97423;
+  
+}
+
+.editButton {
+  padding: 5px 10px;
+  background-color: #337ab7;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.editButton:hover {
+  background-color: #23527c;
+}
+
+.tableHeader .edit{
+  background-color:#e97423;
+}
+
+
+/* The Pop Up */
+
+/* Styling for Popup Overlay */
+.popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999; /* Make sure it's above other content */
+}
+
+/* Styling for Blur Background */
+.blurBackground {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
+  filter: blur(5px); /* Apply blur effect */
+  z-index: -1; /* Behind popup content */
+}
+
+/* Styling for Popup Content */
+.popupContent {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 20px;
+  text-align: center;
+  width:30%;
+  max-width: 80%; /* Limit maximum width */
+  max-height: 80%; /* Limit maximum height */
+  overflow-y: auto; /* Add vertical scroll if content exceeds max height */
+}
+
+/* Styling for Input Group (label + input) */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  padding: 5px;
+}
+.inputGroup label{
+  display: flex;
+  align-items: flex-start;
+  color: #e97423;
+}
+
+.inputGroup label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.inputGroup input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.closeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px; /* Adjust the right spacing as needed */
+  background-color: #e97423;
+  padding: 5px 10px;
+  color: #f0f0f0;
+  border: none;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background-color: #d6601b;
+}
+.popupHeader_h1{
+  background-color: #23527c;
+  padding: 2px;
+  color: #f0f0f0;
+}
+.popup_submit_button{
+  background-color: #e97423;
+  padding: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  color: #f0f0f0;
+  border: none;
+  cursor: pointer;
+
+}
