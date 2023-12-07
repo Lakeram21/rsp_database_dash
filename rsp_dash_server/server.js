@@ -41,8 +41,66 @@ router.route("/product/:sku").get((req, res)=>{
   })
 })
 
+//>>>> Edit a product
+router.route("/product").put((req, res)=>{
+  const data = req.body
+  console.log(data)
+})
+
+// Getting all Manufacturers
+router.route("/allmanufacturer").get((req, res)=>{
+
+  dbOperations.getAllManufacturer().then(result =>{
+    res.json(result)
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).json({ error: 'An error occurred while fetching manufacturers.' });
+  })
+})
 
 
+router.route("/allcategoryonmanufacturer/:manufacturer").get((req, res)=>{
+  const manufacturer = req.params.manufacturer
+  dbOperations.getCategoryOnManufacturer(manufacturer).then(result =>{
+    res.json(result)
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).json({ error: 'An error occurred while fetching manufacturers.' });
+  })
+})
+
+
+router.route("/allProductsOnManuAndDescription/:manufacturer/:description").get((req, res)=>{
+  const manufacturer = req.params.manufacturer
+  const description = req.params.description
+
+  dbOperations.getAllProductsBasedOnManfacturerAndDescription(manufacturer,description).then(result =>{
+    res.json(result)
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).json({ error: 'An error occurred while fetching products.' });
+  })
+})
+
+router.route("/allcategories").get((req, res)=>{
+  dbOperations.getAllProductsCategory().then(result =>{
+    res.json(result)
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).json({ error: 'An error occurred while fetching categories.' });
+  })
+})
+
+router.route("/allproductsoncategories/:category").get((req, res)=>{
+  const category = req.params.category
+
+  dbOperations.getProductsOnCategory(category).then(result =>{
+    res.json(result)
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).json({ error: 'An error occurred while fetching products.' });
+  })
+})
 
 
 

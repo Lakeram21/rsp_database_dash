@@ -114,6 +114,9 @@
   z-index: 9999; /* Make sure it's above other content */
 }
 
+.highlighted {
+  background-color: yellow; /* You can use any background color you prefer */
+}
 /* Styling for Blur Background */
 .blurBackground {
   position: fixed;

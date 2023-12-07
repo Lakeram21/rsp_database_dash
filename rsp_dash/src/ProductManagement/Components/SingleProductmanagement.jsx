@@ -1,13 +1,16 @@
 import React, {useState} from 'react';
 import './SingleProductmanagement.css'; // Import your CSS file if you have any custom styles
 import Popup from 'reactjs-popup';
+import {checkEdits, updateRecord} from "../../Utils/utils"
 
 function SingleProductManagement() {
   const [sku, setSku] = useState(null)
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(null)
+  const [selectedFilter, setSelectedFilter] = useState(null)
   const [showpopUp, setShowPopUp] = useState(false)
-
+  const [originalSelected, setOriginalSelected] = useState(null)
+  const [originalSelectedFilter, setOriginalSelectedFilter] = useState(null)
   const fetchData = async () => {
     try {
         const response = await fetch(`http://localhost:8080/api/product/${sku}`);
@@ -19,11 +22,37 @@ function SingleProductManagement() {
     }
   };
 
-  const fetchSelectedProduct = (sku)=>{
-    setSelected(sku)
+  // The Filters comes as a string and its to be in a dictionary
+  const parseStringToDictionary = (str) => {
+    const keyValuePairs = str.split(', ');
+    const dictionary = {};
+
+    keyValuePairs.forEach((pair) => {
+      const [key, value] = pair.split(': ');
+      dictionary[key] = value;
+    });
+
+    return dictionary;
+  };
+  
+  const fetchSelectedProduct = (product)=>{
+    setSelected(product)
+    setOriginalSelected(product)
+    const dictionary = parseStringToDictionary(product.SectionNames)
+    setSelectedFilter(dictionary)
+    setOriginalSelectedFilter(dictionary)
     setShowPopUp(true)
   }
-  
+  // The Edit function
+  const editProduct = (e)=>{
+    e.preventDefault()
+    let edited  = checkEdits(originalSelected, selected, originalSelectedFilter, selectedFilter)
+    if(edited){
+      const data = updateRecord(selected, selectedFilter)
+    }
+    console.log(edited)
+    
+  }
   const handleClosePopup = ()=>{
     setShowPopUp(false)
   }
@@ -46,6 +75,7 @@ function SingleProductManagement() {
           <div className='productView_category'>
             <div className='tableRow'>
               <div className='tableHeader'>*</div>
+              <div className='tableHeader'>Published</div>
               <div className='tableHeader'>Product Name</div>
               <div className='tableHeader'>Sku</div>
               <div className='tableHeader'>Manufacturer</div>
@@ -58,13 +88,14 @@ function SingleProductManagement() {
               <div className='tableHeader'>Description</div>
               <div className='tableHeader'>SEDescription</div>
               <div className='tableHeader'>SETitle</div>
-              <div className='tableHeader'>Published</div>
+              
             </div>
             {data?.map((product, index) => (
               <div className='tableRow' key={index}>
                   <div className='tableData'>
                     <button className='editButton' onClick={()=>{fetchSelectedProduct(product)}}>Edit</button> {/* Add the Edit button */}
                   </div>
+                  <div className={`tableData published ${product.Published === 0 ? 'highlighted' : ''}`}>{product.Published}</div>
                   <div className='tableData'>{product.ProductName}</div>
                   <div className='tableData'>{product.SKU}</div>
                   <div className='tableData'>{product.Manufacturer}</div>
@@ -77,7 +108,7 @@ function SingleProductManagement() {
                   <div className='tableData'>{product.Description}</div>
                   <div className='tableData'>{product.SEDescription}</div>
                   <div className='tableData'>{product.SETitle}</div>
-                  <div className='tableData'>{product.Published}</div>
+                  
               </div>
              
             ))}
@@ -95,7 +126,11 @@ function SingleProductManagement() {
               <form>
                 <div className='inputGroup'>
                   <label>SKU:</label>
-                  <input type='text' value={selected?.SKU} onChange={(event)=>setSelected({...selected, SKU: event.target.value})}/>
+                  <input 
+                    type='text' 
+                    value={selected?.SKU} 
+                    onChange={(event) => setSelected({ ...selected, SKU: event.target.value })} 
+                  />
                 </div>
                 <div className='inputGroup'>
                   <label>Product Name:</label>
@@ -141,9 +176,17 @@ function SingleProductManagement() {
                 <div className='inputGroup'>
                   <label>SETitle:</label>
                   <textarea  rows='4' type='text' value={selected?.SETitle} onChange={(event)=>setSelected({...selected, SETitle: event.target.value})}/>
+                
+                <h2>Filters</h2>
                 </div>
+                    {Object.entries(selectedFilter).map(([key, value]) => (
+                      <div key={key} className='inputGroup'>
+                        <label>{key}:</label>
+                        <input type='text' value={value}  onChange={(event) => setSelectedFilter({...selectedFilter, [key]:event.target.value})}/>
+                      </div>
+                    ))}
                 <div>
-                  <button className='popup_submit_button'>Submit</button>
+                  <button className='popup_submit_button' onClick={editProduct}>Submit</button>
                 </div>
               </form>            
             </div>

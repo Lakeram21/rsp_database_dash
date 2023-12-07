@@ -3,6 +3,7 @@ const config = {
     password: "password",
     server: "DESKTOP-9BBIKSS",
     database: "RemoteSiteProducts",
+    timeout: 60000,
     options: {
       trustServerCertificate: true,
       enableArithAbort: true,
