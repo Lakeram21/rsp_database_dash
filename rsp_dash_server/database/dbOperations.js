@@ -201,7 +201,6 @@ const getAllManufacturer = async () => {
       let pool = await sql.connect(config);
       let query = `
         SELECT [ManufacturerID]
-            ,[ManufacturerGUID]
             ,[Name]
         FROM Manufacturer as m
         where m.Published = 1
@@ -304,8 +303,17 @@ const getAllProductsCategory = async()=>{
 
 
 // Get All Products Based on a Category
-const getProductsOnCategory = async(category)=>{
+const getProductsOnCategory = async(category, manufacturer)=>{
   try {
+    console.log(category, manufacturer)
+    if (category === "all") {
+      category = null;
+    }
+    if (manufacturer === "all")
+    {
+      manufacturer = null
+    }
+
     let pool = await sql.connect(config);
     let query = `
 
@@ -344,7 +352,7 @@ const getProductsOnCategory = async(category)=>{
   
 		  SELECT
         ep.VariantID,
-        MAX(CASE WHEN cl.Name = 'Preferred' THEN ep.Price END) AS Preferred,
+        MAX(CASE WHEN cl.Name = 'Preferred' and cl.CustomerLevelID = 1 THEN ep.Price END) AS Preferred,
         MAX(CASE WHEN cl.Name = 'Gold' THEN ep.Price END) AS Gold,
         MAX(CASE WHEN cl.Name = 'Reseller' THEN ep.Price END) AS Reseller,
 
@@ -358,7 +366,6 @@ const getProductsOnCategory = async(category)=>{
 				pv.Published = 1
 			GROUP BY
 				ep.VariantID
-   
   )
   
   SELECT
@@ -384,6 +391,7 @@ const getProductsOnCategory = async(category)=>{
       PV.Price,
       PV.MSRP,
       PV.Cost,
+      PV.Dimensions as [MFG LIST],
       P.ReplacementProducts as [Obsolete Replacements],
       pr_ma.Gold,
       pr_ma.Preferred,
@@ -396,11 +404,17 @@ const getProductsOnCategory = async(category)=>{
       cm.Category4,
     
        -- Added column for category hierarchy
-      STRING_AGG(
-          CASE 
-              WHEN sm.ParentSectionName IS NOT NULL THEN sm.ParentSectionName + ': ' + sm.ChildSectionName
-              ELSE sm.ChildSectionName
-          END, ', ') AS SectionNames
+       STUFF((
+          SELECT ', ' + 
+              CASE 
+                  WHEN sm.ParentSectionName IS NOT NULL THEN sm.ParentSectionName + ': ' + sm.ChildSectionName
+                  ELSE sm.ChildSectionName
+              END
+          FROM [RemoteSiteProducts].[dbo].[ProductSection] AS ps_inner
+          INNER JOIN SectionMapping AS sm ON sm.ChildSectionID = ps_inner.SectionID
+          WHERE ps_inner.ProductID = P.ProductID
+          FOR XML PATH(''), TYPE
+      ).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS SectionNames
   FROM
       [RemoteSiteProducts].[dbo].[Product] AS p
       INNER JOIN ProductManufacturer AS PM ON p.[ProductID] = PM.[ProductID]
@@ -415,8 +429,8 @@ const getProductsOnCategory = async(category)=>{
       LEFT JOIN CategoryMapping AS CM ON p.ProductID = CM.ProductID -- Joining with the CTE
       
   WHERE
-      LOWER(CM.CombinedCategories) LIKE '%' + LOWER(@category) + '%' AND
-      m.Deleted = 0
+      (@category is NULL or LOWER(CM.CombinedCategories) LIKE '%' + LOWER(@category) + '%') 
+      AND (@MANU IS NULL OR LOWER(M.Name) LIKE '%' + LOWER(@MANU) + '%')
 
   GROUP BY
       P.[ProductID],
@@ -449,12 +463,16 @@ const getProductsOnCategory = async(category)=>{
       cm.Category1,
       cm.Category2,
       cm.Category3,
-      cm.Category4
+      cm.Category4,
+      PV.Dimensions
       -- Added column for category hierarchy
   `;
 
     let results = await pool.request()
-    .input('category', sql.NVarChar, `${category}`) // Using parameterized query and applying wildcards to the parameter
+    // .input('category', sql.NVarChar, `${category}`) // Using parameterized query and applying wildcards to the parameter
+    .input('MANU', sql.NVarChar, `%${manufacturer || ''}%`)
+    .input('category', sql.NVarChar, `%${category || ''}%`) // Using parameterized query and applying wildcards to the parameter
+   
     .query(query);
 
     let products = results.recordset;
@@ -465,6 +483,76 @@ const getProductsOnCategory = async(category)=>{
     // Return the result
     
     const updatedData = products.map(product => {
+
+      /********Create multiplier****** */ 
+      let mfg_list_price = product['MFG LIST'];
+      let cost = product.Cost;
+
+      if (mfg_list_price) {
+        // Calculate the multiplier
+        let multiplier = cost / mfg_list_price;
+
+        // Round the multiplier to two decimal places
+        multiplier = Math.round(multiplier * 100) / 100;
+        multiplier = Number(multiplier).toFixed(2)
+        product['Multiplier'] = multiplier
+        
+      }
+
+      /********Markup****** */ 
+      let price = product['Price']
+      if (price && cost){
+        let markup = (price/cost) - 1
+        markup = Math.round(markup *100)/100
+        markup = markup*100
+        markup = Number(markup).toFixed(2)
+        markup = markup.toString()+"%"
+        product['Markup'] = markup
+      }
+
+      /*******Calculate Discount Level 1 */ 
+      let preferred = product['Preferred']
+      if(price && preferred){
+        let dis_1 = 1-(preferred/price)
+        dis_1 = Math.round(dis_1 *100)/100
+        dis_1 = dis_1*100
+        dis_1 = Number(dis_1).toFixed(2)
+        dis_1 = dis_1.toString()+"%"
+        product['Discount Level1'] = dis_1
+      }
+
+      /*******Calculate Discount Level 2 */ 
+      let gold = product['Gold']
+      if(price && gold){
+        let dis_1 = 1-(gold/price)
+        dis_1 = Math.round(dis_1 *100)/100
+        dis_1 = dis_1*100
+        dis_1 = Number(dis_1).toFixed(2)
+        dis_1 = dis_1.toString()+"%"
+        product['Discount Level2'] = dis_1
+      }
+
+      /*******Calculate Discount Level 3 */ 
+      let reseller = product['Reseller']
+      if(price && reseller){
+        let dis_1 = 1-(reseller/price)
+        dis_1 = Math.round(dis_1 *100)/100
+        dis_1 = dis_1*100
+        dis_1 = Number(dis_1).toFixed(2)
+        dis_1 = dis_1.toString()+"%"
+        product['Discount Level3'] = dis_1
+      }
+
+      /*******Calculate Discount Level 4 */ 
+      let special = product['Special']
+      if(price && special){
+        let dis_1 = 1-(special/price)
+        dis_1 = Math.round(dis_1 *100)/100
+        dis_1 = dis_1*100
+        dis_1 = Number(dis_1).toFixed(2)
+        dis_1 = dis_1.toString()+"%"
+        product['Discount Level4'] = dis_1
+      }
       // Split SectionNames into key-value pairs
       const keyValuePairs = product.SectionNames.split(',').map(pair => pair.trim().split(':').map(item => item.trim()));
     
@@ -476,8 +564,7 @@ const getProductsOnCategory = async(category)=>{
       return product;
     });
     
-    console.log(updatedData);
-    console.log(products)
+   
     return products
   } catch (error) {
     console.log("Fail to retrieve products: ", error);

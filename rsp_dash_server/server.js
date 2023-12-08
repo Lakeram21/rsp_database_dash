@@ -91,10 +91,11 @@ router.route("/allcategories").get((req, res)=>{
   })
 })
 
-router.route("/allproductsoncategories/:category").get((req, res)=>{
+router.route("/allproductsoncategories/:category/:manfacturer").get((req, res)=>{
   const category = req.params.category
+  const manfacturer = req.params.manfacturer
 
-  dbOperations.getProductsOnCategory(category).then(result =>{
+  dbOperations.getProductsOnCategory(category, manfacturer).then(result =>{
     res.json(result)
   }).catch(error=>{
     console.log(error)

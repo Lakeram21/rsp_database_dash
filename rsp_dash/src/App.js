@@ -7,7 +7,6 @@ import {
 
 import './App.css';
 import HomePage from './HomePage/HomePage';
-import ExcelManagement from './ExcelManagement/ExcelManagement';
 import Chatgpt from './Chatgpt/Chatgpt';
 import ProductManagement from "./ProductManagement/ProductManagement"
 import Inventory from "./Inventory/Inventory"

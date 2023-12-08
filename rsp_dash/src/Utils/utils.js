@@ -86,9 +86,12 @@ export const updateRecord = (updatedData, updatedFilters)=> {
   };
   
 
-  export const getAllProductsOnCategory_manufacturer = async (category) => {
+  export const getAllProductsOnCategory_manufacturer = async (category, manufacturer) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/allproductsoncategories/${category}`, {
+      console.log(category, manufacturer)
+      const url = `http://localhost:8080/api/allproductsoncategories/${encodeURIComponent(category || 'all')}/${encodeURIComponent(manufacturer || 'all')}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +105,7 @@ export const updateRecord = (updatedData, updatedFilters)=> {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error updating record:', error);
+      console.error('Error getting record:', error);
       throw error; // Re-throw the error for the calling code to handle
     }
   };
