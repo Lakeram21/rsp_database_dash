@@ -3,8 +3,9 @@ import { getAllProductsOnCategory_manufacturer, getAllManufacturer} from '../Uti
 import * as XLSX from 'xlsx';
 import PacmanLoader from "react-spinners/PacmanLoader"
 import PageBanner from '../PageBanner'
-
-
+import './ExcelManagement.css'
+import Pagination from './Pagination';
+import SearchBar from './SearchBar';
 
 function BulkExcelManagement() {
   const [category, setCategory] = useState('');
@@ -216,66 +217,34 @@ function BulkExcelManagement() {
   return (
     <div>
       <PageBanner name="Excel Management"/>
-      <div>
-          <form onSubmit={searchForm}>
-          <label htmlFor="manufacturerDropdown">Enter a Category:</label>
-            <input
-              type='text'
-              placeholder='Search based on category'
-              onChange={(event) => {
-                setCategory(event.target.value);
-              }}
-            
-            />
-            <label >Select Manufacturer:</label>
-            <select
-              id="manufacturerDropdown"
-              value={manufacturer}
-              onChange={(event)=>{
-                setManufacturer(event.target.value)
-              }}
-            >
-              <option value="">Select One</option>
-              <option value="all">All</option>
-              {manufacturers?.map((m, index) => (
-                <option key={index} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <input type='submit' value='Submit' />
-          </form>
-          
-      </div>
-      
+      <SearchBar
+      setCategory={setCategory}
+      category={category}
+      setManufacturer={setManufacturer}
+      manufacturer={manufacturer}
+      manufacturers={manufacturers}
+      searchForm={searchForm}
+      />
       <hr />
       <h2>Results: Number of Products Found {products?.length}</h2>
           {loading ? 
           <PacmanLoader
           color='Blue'
           /> : null}
-          {/* {excelLoading ? 
-          <PacmanLoader
-          color='Green'
-          /> : null} */}
       <div>
-        <ul className='pagination'>
-          {Array.from({ length: Math.ceil(products.length / itemsPerPage) }).map((_, index) => (
-            <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
-              <button onClick={() => paginate(index + 1)} className='page-link'>
-                {index + 1}
-              </button>
-            </li>
-          ))}
-        </ul>
+      <Pagination
+        products={products}
+        itemsPerPage={itemsPerPage}
+        paginate={paginate}
+        currentPage={currentPage}
+      />
+      
       </div>
       <div>
       <button onClick={exportToExcel} disabled= {excelLoading}>
         Export to Excel
       </button>
-      {
-        excelLoading ? "Loading":"Finished"
-      }
+     
       </div>
       <div>
         <div className='productViewContainer'>
