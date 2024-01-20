@@ -1,4 +1,7 @@
 /* HomePage.css */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 .homePage {
     background-color: #274b66;

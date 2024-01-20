@@ -157,18 +157,22 @@ function BulkExcelManagement() {
     
         // Add additional headers from SectionNames
         if (product.SectionNames) {
-          const sectionNames = product.SectionNames.split(',').map(pair => pair.trim().split(':'));
+          const sectionNames = product.SectionNames.split(', ').map(pair => pair.trim().split(':'));
           sectionNames.forEach(pair => {
-            // console.log(pair)
-            if (pair.length > 1){
+            if (pair.length > 1) {
               const key = pair[0].trim();
               const value = pair[1].trim();
-              organizedProduct[key] = value;
-              if (!filterheader.includes(key) && key!== "Manufacturer"){
-                filterheader.push(key)
+              
+              if (organizedProduct[key]) {
+                // If key already exists, append the new value with a comma
+                organizedProduct[key] += `, ${value}`;
+              } else {
+                organizedProduct[key] = value;
+                if (!filterheader.includes(key) && key !== "Manufacturer") {
+                  filterheader.push(key);
+                }
               }
             }
-            
           });
         }
     
@@ -178,21 +182,19 @@ function BulkExcelManagement() {
         // Create a new array with strings "Filter" + index
         const newArray = Array.from({ length: filterheader.length }, (_, index) => "Filter" + (index + 1));
         
-        const headerStyle = {
-          font: { bold: true, color: 'white', size: 14 },
-          fill: { bgColor: 'green' },
-          border: { bottom: { style: 'thin', color: 'white' } },
-        };
-
+  
         const worksheet = XLSX.utils.json_to_sheet([{}, ...organizedData.map(entry => entry[0])], { header: orderedHeaders, origin: { r: headerRow, c: startCol }},);
+        
         // XLSX.utils.sheet_add_json(worksheet, organizedData.map(entry => entry[0]), { skipHeader: true, origin: { r: startRow, c: startCol } });
       
         // Add additional headers from SectionNames starting from headerRow + the number of rows in organizedData + 1
         XLSX.utils.sheet_add_json(worksheet, [{}], { header: additionalHeader_below, skipHeader: false, origin: { r: headerRow+1, c: startCol} });
         XLSX.utils.sheet_add_json(worksheet, [{}], { header: additionalHeader_above, skipHeader: false, origin: { r: 0, c: startCol} });
 
-        XLSX.utils.sheet_add_json(worksheet, [{}], { header: filterheader, skipHeader: false, origin: { r: headerRow+1, c: 82} });
-        XLSX.utils.sheet_add_json(worksheet, [{}], { header: newArray, skipHeader: false, origin: { r: headerRow, c: 82} });
+        // Filter header and data
+        XLSX.utils.sheet_add_json(worksheet, [{}], { header: filterheader, skipHeader: false, origin: { r: headerRow+1, c: 81} });
+        
+        XLSX.utils.sheet_add_json(worksheet, [{}], { header: newArray, skipHeader: false, origin: { r: headerRow, c: 81} });
 
         // Create workbook and save
         const workbook = XLSX.utils.book_new();
