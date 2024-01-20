@@ -334,19 +334,27 @@ const getProductsOnCategory = async(category, manufacturer)=>{
 
   CategoryMapping AS (
     SELECT
-			pc.ProductID,
-			MAX(CASE WHEN c.HierarchyLevel = 1 THEN c.HierarchyName END) AS Category1,
-			MAX(CASE WHEN c.HierarchyLevel = 2 THEN c.HierarchyName END) AS Category2,
-			MAX(CASE WHEN c.HierarchyLevel = 3 THEN c.HierarchyName END) AS Category3,
-			MAX(CASE WHEN c.HierarchyLevel = 4 THEN c.HierarchyName END) AS Category4,
-			STRING_AGG(c.HierarchyName, ' | ') AS CombinedCategories
-		FROM
-			[RemoteSiteProducts].[dbo].[Category] AS c
-			INNER JOIN ProductCategory AS pc ON pc.CategoryID = c.CategoryID
-			INNER JOIN Product AS p ON p.ProductID = pc.ProductID
-		GROUP BY
-			pc.ProductID
-  ),
+        pc.ProductID,
+        MAX(CASE WHEN c.HierarchyLevel = 1 THEN c.HierarchyName END) AS Category1,
+        MAX(CASE WHEN c.HierarchyLevel = 2 THEN c.HierarchyName END) AS Category2,
+        MAX(CASE WHEN c.HierarchyLevel = 3 THEN c.HierarchyName END) AS Category3,
+        MAX(CASE WHEN c.HierarchyLevel = 4 THEN c.HierarchyName END) AS Category4,
+        CONCAT(
+            MAX(CASE WHEN c.HierarchyLevel = 1 THEN c.HierarchyName END),
+            ' | ',
+            MAX(CASE WHEN c.HierarchyLevel = 2 THEN c.HierarchyName END),
+            ' | ',
+            MAX(CASE WHEN c.HierarchyLevel = 3 THEN c.HierarchyName END),
+            ' | ',
+            MAX(CASE WHEN c.HierarchyLevel = 4 THEN c.HierarchyName END)
+        ) AS CombinedCategories
+    FROM
+        [RemoteSiteProducts].[dbo].[Category] AS c
+        INNER JOIN ProductCategory AS pc ON pc.CategoryID = c.CategoryID
+        INNER JOIN Product AS p ON p.ProductID = pc.ProductID
+    GROUP BY
+        pc.ProductID
+),
 
   price_mapping as (
   
@@ -398,13 +406,13 @@ const getProductsOnCategory = async(category, manufacturer)=>{
       pr_ma.Reseller,
       pr_ma.Special,
       pr_ma.Volume as [Volume Reseller],
-      cm.Category1,
-      cm.Category2,
-      cm.Category3,
-      cm.Category4,
+      MAX(cm.Category1) AS Category1,
+      MAX(cm.Category2) AS Category2,
+      MAX(cm.Category3) AS Category3,
+      MAX(cm.Category4) AS Category4,
     
        -- Added column for category hierarchy
-       STUFF((
+      STUFF((
           SELECT ', ' + 
               CASE 
                   WHEN sm.ParentSectionName IS NOT NULL THEN sm.ParentSectionName + ': ' + sm.ChildSectionName
@@ -418,19 +426,19 @@ const getProductsOnCategory = async(category, manufacturer)=>{
   FROM
       [RemoteSiteProducts].[dbo].[Product] AS p
       INNER JOIN ProductManufacturer AS PM ON p.[ProductID] = PM.[ProductID]
-      INNER JOIN Manufacturer AS M ON M.[ManufacturerID] = PM.[ManufacturerID]
-      INNER JOIN ProductDistributor AS PD ON p.[ProductID] = PD.[ProductID]
-      INNER JOIN Distributor AS D ON PD.[DistributorID] = D.[DistributorID]
-      INNER JOIN ProductSection AS ps ON p.ProductID = ps.ProductID
-      INNER JOIN SectionMapping AS sm ON sm.ChildSectionID = ps.SectionID
+      left JOIN Manufacturer AS M ON M.[ManufacturerID] = PM.[ManufacturerID]
+      left JOIN ProductDistributor AS PD ON p.[ProductID] = PD.[ProductID]
+      left JOIN Distributor AS D ON PD.[DistributorID] = D.[DistributorID]
+      left JOIN ProductSection AS ps ON p.ProductID = ps.ProductID
+      left JOIN SectionMapping AS sm ON sm.ChildSectionID = ps.SectionID
       
-      INNER JOIN ProductVariant as pv ON pv.ProductID = p.ProductID
-	  left join price_mapping as pr_ma on pr_ma.VariantID = pv.VariantID
-      LEFT JOIN CategoryMapping AS CM ON p.ProductID = CM.ProductID -- Joining with the CTE
+      left JOIN ProductVariant as pv ON pv.ProductID = p.ProductID
+      left JOIN CategoryMapping AS CM ON p.ProductID = CM.ProductID -- Joining with the CTE
+
+	    left join price_mapping as pr_ma on pr_ma.VariantID = pv.VariantID
       
-  WHERE
-      (@category is NULL or LOWER(CM.CombinedCategories) LIKE '%' + LOWER(@category) + '%') 
-      AND (@MANU IS NULL OR LOWER(M.Name) LIKE '%' + LOWER(@MANU) + '%')
+  WHERE (@category IS NULL OR LOWER(cm.CombinedCategories) LIKE LOWER(@category)) 
+  AND (@manufacturer IS NULL OR LOWER(M.Name) LIKE LOWER(@manufacturer) )
 
   GROUP BY
       P.[ProductID],
@@ -466,13 +474,13 @@ const getProductsOnCategory = async(category, manufacturer)=>{
       cm.Category4,
       PV.Dimensions
       -- Added column for category hierarchy
-  `;
+    `;
+   
 
     let results = await pool.request()
     // .input('category', sql.NVarChar, `${category}`) // Using parameterized query and applying wildcards to the parameter
-    .input('MANU', sql.NVarChar, `%${manufacturer || ''}%`)
+    .input('manufacturer', sql.NVarChar, `%${manufacturer || ''}%`)
     .input('category', sql.NVarChar, `%${category || ''}%`) // Using parameterized query and applying wildcards to the parameter
-   
     .query(query);
 
     let products = results.recordset;
@@ -554,18 +562,25 @@ const getProductsOnCategory = async(category, manufacturer)=>{
         product['Discount Level4'] = dis_1
       }
       // Split SectionNames into key-value pairs
-      const keyValuePairs = product.SectionNames.split(',').map(pair => pair.trim().split(':').map(item => item.trim()));
-    
+
+      const keyValuePairs = product.SectionNames?.split(',').map(pair => pair.trim().split(':').map(item => item.trim()));
+   
       // Add key-value pairs directly to the product
-      keyValuePairs.forEach(([key, value]) => {
-        product[key] = value;
-      });
-    
+      if (keyValuePairs) {
+        
+        
+        // Add key-value pairs directly to the product
+        keyValuePairs.forEach(([key, value]) => {
+          product[key] = value;
+        });
+      }
+     
       return product;
     });
-    
+    console.log(updatedData.length)
+    console.log(products.length)
    
-    return products
+    return updatedData
   } catch (error) {
     console.log("Fail to retrieve products: ", error);
     // Close the connection in case of an error
