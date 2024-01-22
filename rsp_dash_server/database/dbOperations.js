@@ -437,8 +437,10 @@ const getProductsOnCategory = async(category, manufacturer)=>{
 
 	    left join price_mapping as pr_ma on pr_ma.VariantID = pv.VariantID
       
-  WHERE (@category IS NULL OR LOWER(cm.CombinedCategories) LIKE LOWER(@category)) 
-  AND (@manufacturer IS NULL OR LOWER(M.Name) LIKE LOWER(@manufacturer) )
+  WHERE  
+  (${category === null ? '1 = 1' : 'LOWER(cm.CombinedCategories) LIKE LOWER(@category)'}
+  AND 
+  ${manufacturer === null ? '1 = 1' : 'LOWER(M.Name) LIKE LOWER(@manufacturer)'})
 
   GROUP BY
       P.[ProductID],
@@ -476,14 +478,16 @@ const getProductsOnCategory = async(category, manufacturer)=>{
       -- Added column for category hierarchy
     `;
    
-
+    console.log("category:", category)
+    console.log("Manufacturer:", manufacturer)
     let results = await pool.request()
-    // .input('category', sql.NVarChar, `${category}`) // Using parameterized query and applying wildcards to the parameter
+        // .input('category', sql.NVarChar, `${category}`) // Using parameterized query and applying wildcards to the parameter
     .input('manufacturer', sql.NVarChar, `%${manufacturer || ''}%`)
     .input('category', sql.NVarChar, `%${category || ''}%`) // Using parameterized query and applying wildcards to the parameter
     .query(query);
 
     let products = results.recordset;
+
 
     // Close the connection
     await sql.close();
