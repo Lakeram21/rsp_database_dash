@@ -7,11 +7,36 @@ function ProductSearch() {
   const [manufacturers, setManufacturers] = useState([])
   const [category, setCategory] = useState('');
   const [manufacturer, setManufacturer] = useState('');
-  const filter_headers = Array.from({ length: 6 }, (_, index) => `Filter ${index + 1}`);
+  const [Loading, setLoading] = useState(false)
+  const [filter_headers, setHeaders] = useState([])
+
+  //const filter_headers = Array.from({ length: 6 }, (_, index) => `Filter ${index + 1}`);
 
   const getProducts = async () => {
+    setLoading(true)
+    let tem_header = []
+
     const fetchedProducts = await getAllProductsOnCategory_manufacturer(category, manufacturer);
     setFetchedProducts(fetchedProducts);
+    // console.log(fetchedProducts)
+
+     //Set headers for the app view
+     fetchedProducts?.forEach((product, index) => {
+      const sectionNames = product.SectionNames || '';
+      const sectionPairs = sectionNames.split(',').map(pair => pair.trim().split(':'));
+    
+      // Iterate through each key-value pair in the product
+      sectionPairs.forEach(pair => {
+        const key = pair[0].trim();
+        
+        if(!tem_header.includes(key)){
+          tem_header.push(key)
+        }
+      });
+    });
+    setHeaders(tem_header)
+
+    setLoading(false)
   };
 
   const fetchManufacturers = async () => {
@@ -19,7 +44,6 @@ function ProductSearch() {
     const sortedManufacturers = fetchedmanufacturers.sort((a, b) => a.Name.localeCompare(b.Name));
 
     setManufacturers(sortedManufacturers)
-
     // Use the manufacturers data to populate the dropdown
   };
 
@@ -27,6 +51,7 @@ function ProductSearch() {
     fetchManufacturers();
   }, []);
 
+  useEffect(()=>{},[])
   return (
     <div className='mt-40 container mx-auto'>
       <div className="flex space-x-4 items-center mt-4">
@@ -53,8 +78,9 @@ function ProductSearch() {
         <button
           className="bg-orange-300 text-white px-4 py-2 rounded-md hover:bg-orange-400"
           onClick={getProducts}
+          disabled={Loading}
         >
-          Get Products
+          {Loading ? 'Loading...' : 'Get Products'}
         </button>
       </div>
 

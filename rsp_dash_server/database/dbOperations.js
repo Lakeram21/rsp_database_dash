@@ -572,10 +572,12 @@ const getProductsOnCategory = async(category, manufacturer)=>{
       // Add key-value pairs directly to the product
       if (keyValuePairs) {
         
-        
         // Add key-value pairs directly to the product
         keyValuePairs.forEach(([key, value]) => {
-          product[key] = value;
+          if (key === "Manufacturer" && product[key] !== value) {
+            product[key] = value;
+          }
+           
         });
       }
      
