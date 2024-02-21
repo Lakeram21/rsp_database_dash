@@ -2,3 +2,12 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+
+
+.block.mt-2.p-2.sm\:col-span-4.border-b span {
+    /* Your specific styles for span tags within the specified div */
+    color: rgb(37, 34, 34);
+    font-weight: bold;
+    text-align: right;
+    /* Add more styles as needed */
+  }

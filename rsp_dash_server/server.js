@@ -17,11 +17,24 @@ app.use("/api", router) //his middleware is used to mount a specific router unde
 /********************************************
  * Routes for all Endpoints
 ****************/
-// This is your middleware and will be called before any other routes are hit
-// We can add auth here and parseing etc
-router.use((req, res, next)=>{
-  console.log("Middleware")
-  next()
+// // This is your middleware and will be called before any other routes are hit
+// // We can add auth here and parseing etc
+// router.use((req, res, next)=>{
+//   console.log("Middleware")
+//   next()
+// })
+
+
+// Getting all Manufacturers
+router.route("/supplier").post((req, res)=>{
+  const category = req.body.category
+  const manufacturers = req.body.manufacturers
+  dbOperations.getSupplierBasedOnCategoryAndManu(category, manufacturers ).then(result =>{
+    res.json(result)
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).json({ error: 'An error occurred while fetching suppliers.' });
+  })
 })
 
 //>>>> Get a specific Product by Sku
@@ -46,6 +59,9 @@ router.route("/product").put((req, res)=>{
   const data = req.body
   console.log(data)
 })
+
+
+
 
 // Getting all Manufacturers
 router.route("/allmanufacturer").get((req, res)=>{

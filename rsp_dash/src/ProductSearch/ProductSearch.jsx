@@ -40,6 +40,7 @@ function ProductSearch() {
   };
 
   const fetchManufacturers = async () => {
+    setManufacturers([])
     const fetchedmanufacturers = await getAllManufacturer();
     const sortedManufacturers = fetchedmanufacturers.sort((a, b) => a.Name.localeCompare(b.Name));
 

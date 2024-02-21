@@ -43,10 +43,35 @@ export const updateRecord = (updatedData, updatedFilters)=> {
   }
 
   // Get all manufacturer
-  export const getAllManufacturer = async () => {
+export const getAllManufacturer = async () => {
     try {
       const response = await fetch('http://localhost:8080/api/allmanufacturer', {
         method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating record:', error);
+      throw error; // Re-throw the error for the calling code to handle
+    }
+  };
+
+  export const getAllSupplierOnCategoryNManu = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/supplier', {
+        method: 'POST',
+        body:JSON.stringify({
+          "category": "Cta",
+          "manufacturers": []
+        }),
         headers: {
           'Content-Type': 'application/json',
         },

@@ -57,8 +57,28 @@ function HomePageNew() {
                     <div className="p-6 bg-orange shadow-md rounded-md transition-all hover:bg-orange-300 hover:text-white">
                         {/* First Card Content */}
                         {/* Add your first card content here */}
-                        <p className="text-3xl font-bold text-orange-300 hover:text-white">Chat Search</p>
+                        <p className="text-3xl font-bold text-orange-300 hover:text-white">GPT Search</p>
                     </div>
+                </div>
+
+                <div className="mt-12 lg:w-1/2">
+                    <Link to="/panelestimator">
+                        <div className="p-6 bg-orange shadow-md rounded-md transition-all hover:bg-orange-300 hover:text-white">
+                            {/* First Card Content */}
+                            {/* Add your first card content here */}
+                            <p className="text-3xl font-bold text-orange-300 hover:text-white">Panel Estimator</p>
+                        </div>
+                    </Link>
+                </div>
+
+                <div className="mt-12 lg:w-1/2">
+                    <Link to="/productcategorycompare">
+                        <div className="p-6 bg-orange shadow-md rounded-md transition-all hover:bg-orange-300 hover:text-white">
+                            {/* First Card Content */}
+                            {/* Add your first card content here */}
+                            <p className="text-3xl font-bold text-orange-300 hover:text-white">Product Comparision</p>
+                        </div>
+                    </Link>
                 </div>
             </div>
             

@@ -5,301 +5,49 @@ const util = require("util");
 const Excel = require("exceljs");
 
 
-// Get Products based on a sku
-const getAllProducts = async (SKU) => {
+const getSupplierBasedOnCategoryAndManu = async(category, manufacturers)=>{
   try {
-      let pool = await sql.connect(config);
-      let query = `
-    
-    WITH SectionMapping AS (
-        SELECT s.SectionID AS ChildSectionID,
-               s.[Name] AS ChildSectionName,
-               s.ParentSectionID AS ParentSectionID,
-               p.[Name] AS ParentSectionName
-        FROM [RemoteSiteProducts].[dbo].[Section] AS s
-        LEFT JOIN [RemoteSiteProducts].[dbo].[Section] AS p
-        ON s.ParentSectionID = p.SectionID
-    )
-
-    SELECT TOP (10)
-        P.[ProductID],
-        P.[Name] AS ProductName,
-        P.[SKU],
-        M.[Name] AS Manufacturer,
-        P.[ManufacturerPartNumber],
-        D.[Name] As Supplier,
-        -- Include other columns from the ProductSection table
-        P.[RelatedProducts],
-        P.[MiscText],
-        P.[ExtensionData],
-        P.[Summary],
-        P.[Description],
-        P.[SEDescription],
-        P.[SETitle],
-        P.[ImageFilenameOverride],
-        P.[Published],
-        STRING_AGG(
-            CASE 
-                WHEN sm.ParentSectionName IS NOT NULL THEN sm.ParentSectionName + ': ' + sm.ChildSectionName
-                ELSE sm.ChildSectionName
-            END, ', ') AS SectionNames
-    FROM [RemoteSiteProducts].[dbo].[Product] AS p
-    INNER JOIN [RemoteSiteProducts].[dbo].[ProductManufacturer] AS PM ON p.[ProductID] = PM.[ProductID]
-    INNER JOIN [RemoteSiteProducts].[dbo].[Manufacturer] AS M ON M.[ManufacturerID] = PM.[ManufacturerID]
-    INNER JOIN [RemoteSiteProducts].[dbo].[ProductDistributor] AS PD ON p.[ProductID] = PD.[ProductID]
-    INNER JOIN [RemoteSiteProducts].[dbo].[Distributor] AS D ON PD.[DistributorID] = D.[DistributorID]
-    INNER JOIN [RemoteSiteProducts].[dbo].[ProductSection] AS ps ON p.ProductID = ps.ProductID
-    INNER JOIN SectionMapping AS sm ON sm.ChildSectionID = ps.SectionID
-    WHERE sm.ParentSectionName IS NOT NULL and P.SKU LIKE @SKU
-    GROUP BY P.[ProductID],
-        P.[Name],
-        P.[SKU],
-        M.[Name],
-        P.[ManufacturerPartNumber],
-        D.[Name],
-        P.[RelatedProducts],
-        P.[MiscText],
-        P.[ExtensionData],
-        P.[Summary],
-        P.[Description],
-        P.[SEDescription],
-        P.[SETitle],
-        P.[ImageFilenameOverride],
-        P.[Published]
-        `;
-
-        let results = await pool.request()
-          .input('SKU', sql.NVarChar, `%${SKU}%`) // Using parameterized query and applying wildcards to the parameter
-          .query(query);
-
-        let products = results.recordset;
-
-      return products;
-  } catch (error) {
-      console.log(error);
-      throw error; // Rethrow the error for proper error handling ||
-  }
-};
-
-const getAllProductsBasedOnManfacturerAndDescription = async (Manufacturer, Description) => {
-  try {
-    if (Description === "null") {
-      Description = null;
-    }
-    if (Manufacturer == "null")
-    {
-      Manufacturer = null
-    }
-
-    console.log(Manufacturer, Description);
     let pool = await sql.connect(config);
-    // AND (@DESCRIPTION IS NULL OR ${likeConditions})
-    // // Split the Description into an array of words using non-alphanumeric characters as separators
-    // const descriptionWords = Description ? Description.split(/\W+/) : [];
+    let query = `
+    SELECT
+    c.HierarchyName as [Category Name],
+    d.Name as Supplier,
+    m.Name as Manufacturer
+    FROM
+        RemoteSiteProducts.dbo.Category AS c
+    LEFT JOIN
+        RemoteSiteProducts.dbo.ProductCategory AS pc ON pc.CategoryID = c.CategoryID
+    LEFT JOIN
+        RemoteSiteProducts.dbo.ProductManufacturer AS pm ON pm.ProductID = pc.ProductID
+    LEFT JOIN
+        RemoteSiteProducts.dbo.Manufacturer AS m ON m.ManufacturerID = pm.ManufacturerID
+    LEFT JOIN
+        RemoteSiteProducts.dbo.ProductDistributor AS pd ON pd.ProductID = pc.ProductID
+    LEFT JOIN
+        RemoteSiteProducts.dbo.Distributor AS d ON d.DistributorID = pd.DistributorID
+    WHERE
+        c.HierarchyName LIKE '%stainless%steel%enclosure%'
+        AND m.Name LIKE '%' -- Add more specific conditions if possible
+    GROUP BY
+        c.HierarchyName, d.Name, m.Name;
+    `;
 
-    // // Create a dynamic WHERE clause with multiple LIKE conditions
-    // const likeConditions = descriptionWords.map(
-    //   (word) =>
-    //     `LOWER(P.[Description]) LIKE '%' + LOWER('${word.replace("'", "''")}') + '%'`
-    // ).join(' AND ');
+    // Execute the query
+    const result = await pool.request().query(query);
 
-      let query = `
-    
-    WITH SectionMapping AS (
-        SELECT s.SectionID AS ChildSectionID,
-               s.[Name] AS ChildSectionName,
-               s.ParentSectionID AS ParentSectionID,
-               p.[Name] AS ParentSectionName
-        FROM [RemoteSiteProducts].[dbo].[Section] AS s
-        LEFT JOIN [RemoteSiteProducts].[dbo].[Section] AS p
-        ON s.ParentSectionID = p.SectionID
-    )
+    // Close the connection
+    await sql.close();
 
-    SELECT TOP (100)
-        P.[ProductID],
-        P.[Name] AS ProductName,
-        P.[SKU],
-        M.[Name] AS Manufacturer,
-        P.[ManufacturerPartNumber],
-        D.[Name] As Supplier,
-        -- Include other columns from the ProductSection table
-        P.[RelatedProducts],
-        P.[MiscText],
-        P.[ExtensionData],
-        P.[Summary],
-        P.[Description],
-        P.[SEDescription],
-        P.[SETitle],
-        P.[ImageFilenameOverride],
-        P.[Published],
-        STRING_AGG(
-            CASE 
-                WHEN sm.ParentSectionName IS NOT NULL THEN sm.ParentSectionName + ': ' + sm.ChildSectionName
-                ELSE sm.ChildSectionName
-            END, ', ') AS SectionNames
-    FROM [RemoteSiteProducts].[dbo].[Product] AS p
-    INNER JOIN [RemoteSiteProducts].[dbo].[ProductManufacturer] AS PM ON p.[ProductID] = PM.[ProductID]
-    INNER JOIN [RemoteSiteProducts].[dbo].[Manufacturer] AS M ON M.[ManufacturerID] = PM.[ManufacturerID]
-    INNER JOIN [RemoteSiteProducts].[dbo].[ProductDistributor] AS PD ON p.[ProductID] = PD.[ProductID]
-    INNER JOIN [RemoteSiteProducts].[dbo].[Distributor] AS D ON PD.[DistributorID] = D.[DistributorID]
-    INNER JOIN [RemoteSiteProducts].[dbo].[ProductSection] AS ps ON p.ProductID = ps.ProductID
-    INNER JOIN SectionMapping AS sm ON sm.ChildSectionID = ps.SectionID
-
-    
-    WHERE (@MANU IS NULL OR LOWER(M.Name) LIKE LOWER(@MANU))
-    AND (@DESCRIPTION IS NULL OR LOWER(P.[Description]) LIKE '%' + LOWER(@DESCRIPTION) + '%')
-
-    GROUP BY P.[ProductID],
-        P.[Name],
-        P.[SKU],
-        M.[Name],
-        P.[ManufacturerPartNumber],
-        D.[Name],
-        P.[RelatedProducts],
-        P.[MiscText],
-        P.[ExtensionData],
-        P.[Summary],
-        P.[Description],
-        P.[SEDescription],
-        P.[SETitle],
-        P.[ImageFilenameOverride],
-        P.[Published]
-        `;
-
-        let results = await pool.request()
-          .input('MANU', sql.NVarChar, `%${Manufacturer || ''}%`)
-          .input('DESCRIPTION', sql.NVarChar, `%${Description || ''}%`) // Using parameterized query and applying wildcards to the parameter
-          .query(query);
-
-        let products = results.recordset;
-
-      return products;
+    // Return the result
+    return result.recordset;
   } catch (error) {
-      console.log(error);
-      throw error; // Rethrow the error for proper error handling ||
+    console.log("Fail to retrieve Suppliers: ", error);
+    // Close the connection in case of an error
+    await sql.close();
+    // Optionally, you can throw the error for the calling code to handle
+    throw error;
   }
-};
-
-// Edit a product that was found by a sku
-const editProduct = async (data) => {
-    try {
-        let pool = await sql.connect(config);
-        let query = ``
-    }
-    catch (error) {
-        console.log("Fail to edit: ", error)
-    }
 }
-
-/**
- * Retrieves a list of manufacturers from the database.
- * @returns {Promise<Array>} A promise that resolves to an array of manufacturers.
- * @throws {Error} Throws an error if the retrieval process fails.
- **/
-const getAllManufacturer = async () => {
-    try {
-      let pool = await sql.connect(config);
-      let query = `
-        SELECT [ManufacturerID]
-            ,[Name]
-        FROM Manufacturer as m
-        where m.Published = 1
-      `;
-  
-      // Execute the query
-      const result = await pool.request().query(query);
-  
-      // Close the connection
-      await sql.close();
-  
-      // Return the result
-      return result.recordset;
-    } catch (error) {
-      console.log("Fail to retrieve manufacturers: ", error);
-      // Close the connection in case of an error
-      await sql.close();
-      // Optionally, you can throw the error for the calling code to handle
-      throw error;
-    }
-  };
-
-  
-// Get all Catgory based on manufacturer
-const getCategoryOnManufacturer = async(manufacturer)=>{
-  try {
-    let pool = await sql.connect(config);
-    let query = `
-    SELECT 
-        p.ProductID
-        ,p.Name as ProductName
-        ,p.SKU
-        ,p.SEAltText as ShortDescription
-        ,c.Name as CategoryName
-        ,m.Name as ManufacturerName
-    FROM Product as p
-      inner join ProductCategory as pc
-      on p.ProductID = pc.ProductID
-      inner join Category as c
-      on c.CategoryID = pc.CategoryID
-      inner join ProductManufacturer as pm
-      on pm.ProductID = p.ProductID
-      inner join Manufacturer as m
-      on m.ManufacturerID = pm.ManufacturerID
-      where m.Name = @manufacturer and m.Deleted = 0
-    `;
-    // Execute the query
-    let results = await pool.request()
-    .input('manufacturer', sql.NVarChar, `${manufacturer}`) // Using parameterized query and applying wildcards to the parameter
-    .query(query);
-
-    let products = results.recordset;
-
-    // Close the connection
-    await sql.close();
-
-    // Return the result
-    return products
-  } catch (error) {
-    console.log("Fail to retrieve manufacturers: ", error);
-    // Close the connection in case of an error
-    await sql.close();
-    // Optionally, you can throw the error for the calling code to handle
-    throw error;
-  }
-  }
-
-
-// Get All Products Based on a Category
-const getAllProductsCategory = async()=>{
-  try {
-    let pool = await sql.connect(config);
-    let query = `
-    SELECT distinct
-      CategoryID,
-      Name,
-      HierarchyName
-    FROM Category
-    `;
-
-    // Execute the query
-    let results = await pool.request()
-    .query(query);
-
-    let products = results.recordset;
-    // Close the connection
-    await sql.close();
-
-    // Return the result
-    return products
-  } catch (error) {
-    console.log("Fail to retrieve categories: ", error);
-    // Close the connection in case of an error
-    await sql.close();
-    // Optionally, you can throw the error for the calling code to handle
-    throw error;
-  }
-  }
-
 
 
 // Get All Products Based on a Category
@@ -491,11 +239,15 @@ const getProductsOnCategory = async(category, manufacturer)=>{
 
     // Close the connection
     await sql.close();
-
     // Return the result
     
     const updatedData = products.map(product => {
-
+      // Shift the Category
+      if (product.Category1 == null){
+        product.Category1 = product.Category2
+        product.Category2 = product.Category3
+        product.Category3 = product.Category4
+      }
       /********Create multiplier****** */ 
       let mfg_list_price = product['MFG LIST'];
       let cost = product.Cost;
@@ -596,6 +348,308 @@ const getProductsOnCategory = async(category, manufacturer)=>{
   }
   }
 
+
+/**
+ * Retrieves a list of manufacturers from the database.
+ * @returns {Promise<Array>} A promise that resolves to an array of manufacturers.
+ * @throws {Error} Throws an error if the retrieval process fails.
+ **/
+const getAllManufacturer = async () => {
+  try {
+    let pool = await sql.connect(config);
+    let query = `
+      SELECT [ManufacturerID]
+          ,[Name]
+      FROM Manufacturer as m
+      where m.Published = 1
+    `;
+
+    // Execute the query
+    const result = await pool.request().query(query);
+
+    // Close the connection
+    await sql.close();
+
+    // Return the result
+    return result.recordset;
+  } catch (error) {
+    console.log("Fail to retrieve manufacturers: ", error);
+    // Close the connection in case of an error
+    await sql.close();
+    // Optionally, you can throw the error for the calling code to handle
+    throw error;
+  }
+};
+
+// Get Products based on a sku
+const getAllProducts = async (SKU) => {
+  try {
+      let pool = await sql.connect(config);
+      let query = `
+    
+    WITH SectionMapping AS (
+        SELECT s.SectionID AS ChildSectionID,
+               s.[Name] AS ChildSectionName,
+               s.ParentSectionID AS ParentSectionID,
+               p.[Name] AS ParentSectionName
+        FROM [RemoteSiteProducts].[dbo].[Section] AS s
+        LEFT JOIN [RemoteSiteProducts].[dbo].[Section] AS p
+        ON s.ParentSectionID = p.SectionID
+    )
+
+    SELECT TOP (10)
+        P.[ProductID],
+        P.[Name] AS ProductName,
+        P.[SKU],
+        M.[Name] AS Manufacturer,
+        P.[ManufacturerPartNumber],
+        D.[Name] As Supplier,
+        -- Include other columns from the ProductSection table
+        P.[RelatedProducts],
+        P.[MiscText],
+        P.[ExtensionData],
+        P.[Summary],
+        P.[Description],
+        P.[SEDescription],
+        P.[SETitle],
+        P.[ImageFilenameOverride],
+        P.[Published],
+        STRING_AGG(
+            CASE 
+                WHEN sm.ParentSectionName IS NOT NULL THEN sm.ParentSectionName + ': ' + sm.ChildSectionName
+                ELSE sm.ChildSectionName
+            END, ', ') AS SectionNames
+    FROM [RemoteSiteProducts].[dbo].[Product] AS p
+    INNER JOIN [RemoteSiteProducts].[dbo].[ProductManufacturer] AS PM ON p.[ProductID] = PM.[ProductID]
+    INNER JOIN [RemoteSiteProducts].[dbo].[Manufacturer] AS M ON M.[ManufacturerID] = PM.[ManufacturerID]
+    INNER JOIN [RemoteSiteProducts].[dbo].[ProductDistributor] AS PD ON p.[ProductID] = PD.[ProductID]
+    INNER JOIN [RemoteSiteProducts].[dbo].[Distributor] AS D ON PD.[DistributorID] = D.[DistributorID]
+    INNER JOIN [RemoteSiteProducts].[dbo].[ProductSection] AS ps ON p.ProductID = ps.ProductID
+    INNER JOIN SectionMapping AS sm ON sm.ChildSectionID = ps.SectionID
+    WHERE sm.ParentSectionName IS NOT NULL and P.SKU LIKE @SKU
+    GROUP BY P.[ProductID],
+        P.[Name],
+        P.[SKU],
+        M.[Name],
+        P.[ManufacturerPartNumber],
+        D.[Name],
+        P.[RelatedProducts],
+        P.[MiscText],
+        P.[ExtensionData],
+        P.[Summary],
+        P.[Description],
+        P.[SEDescription],
+        P.[SETitle],
+        P.[ImageFilenameOverride],
+        P.[Published]
+        `;
+
+        let results = await pool.request()
+          .input('SKU', sql.NVarChar, `%${SKU}%`) // Using parameterized query and applying wildcards to the parameter
+          .query(query);
+
+        let products = results.recordset;
+
+      return products;
+  } catch (error) {
+      console.log(error);
+      throw error; // Rethrow the error for proper error handling ||
+  }
+};
+
+const getAllProductsBasedOnManfacturerAndDescription = async (Manufacturer, Description) => {
+  try {
+    if (Description === "null") {
+      Description = null;
+    }
+    if (Manufacturer == "null")
+    {
+      Manufacturer = null
+    }
+
+    console.log(Manufacturer, Description);
+    let pool = await sql.connect(config);
+    // AND (@DESCRIPTION IS NULL OR ${likeConditions})
+    // // Split the Description into an array of words using non-alphanumeric characters as separators
+    // const descriptionWords = Description ? Description.split(/\W+/) : [];
+
+    // // Create a dynamic WHERE clause with multiple LIKE conditions
+    // const likeConditions = descriptionWords.map(
+    //   (word) =>
+    //     `LOWER(P.[Description]) LIKE '%' + LOWER('${word.replace("'", "''")}') + '%'`
+    // ).join(' AND ');
+
+      let query = `
+    
+    WITH SectionMapping AS (
+        SELECT s.SectionID AS ChildSectionID,
+               s.[Name] AS ChildSectionName,
+               s.ParentSectionID AS ParentSectionID,
+               p.[Name] AS ParentSectionName
+        FROM [RemoteSiteProducts].[dbo].[Section] AS s
+        LEFT JOIN [RemoteSiteProducts].[dbo].[Section] AS p
+        ON s.ParentSectionID = p.SectionID
+    )
+
+    SELECT TOP (100)
+        P.[ProductID],
+        P.[Name] AS ProductName,
+        P.[SKU],
+        M.[Name] AS Manufacturer,
+        P.[ManufacturerPartNumber],
+        D.[Name] As Supplier,
+        -- Include other columns from the ProductSection table
+        P.[RelatedProducts],
+        P.[MiscText],
+        P.[ExtensionData],
+        P.[Summary],
+        P.[Description],
+        P.[SEDescription],
+        P.[SETitle],
+        P.[ImageFilenameOverride],
+        P.[Published],
+        STRING_AGG(
+            CASE 
+                WHEN sm.ParentSectionName IS NOT NULL THEN sm.ParentSectionName + ': ' + sm.ChildSectionName
+                ELSE sm.ChildSectionName
+            END, ', ') AS SectionNames
+    FROM [RemoteSiteProducts].[dbo].[Product] AS p
+    INNER JOIN [RemoteSiteProducts].[dbo].[ProductManufacturer] AS PM ON p.[ProductID] = PM.[ProductID]
+    INNER JOIN [RemoteSiteProducts].[dbo].[Manufacturer] AS M ON M.[ManufacturerID] = PM.[ManufacturerID]
+    INNER JOIN [RemoteSiteProducts].[dbo].[ProductDistributor] AS PD ON p.[ProductID] = PD.[ProductID]
+    INNER JOIN [RemoteSiteProducts].[dbo].[Distributor] AS D ON PD.[DistributorID] = D.[DistributorID]
+    INNER JOIN [RemoteSiteProducts].[dbo].[ProductSection] AS ps ON p.ProductID = ps.ProductID
+    INNER JOIN SectionMapping AS sm ON sm.ChildSectionID = ps.SectionID
+
+    
+    WHERE (@MANU IS NULL OR LOWER(M.Name) LIKE LOWER(@MANU))
+    AND (@DESCRIPTION IS NULL OR LOWER(P.[Description]) LIKE '%' + LOWER(@DESCRIPTION) + '%')
+
+    GROUP BY P.[ProductID],
+        P.[Name],
+        P.[SKU],
+        M.[Name],
+        P.[ManufacturerPartNumber],
+        D.[Name],
+        P.[RelatedProducts],
+        P.[MiscText],
+        P.[ExtensionData],
+        P.[Summary],
+        P.[Description],
+        P.[SEDescription],
+        P.[SETitle],
+        P.[ImageFilenameOverride],
+        P.[Published]
+        `;
+
+        let results = await pool.request()
+          .input('MANU', sql.NVarChar, `%${Manufacturer || ''}%`)
+          .input('DESCRIPTION', sql.NVarChar, `%${Description || ''}%`) // Using parameterized query and applying wildcards to the parameter
+          .query(query);
+
+        let products = results.recordset;
+
+      return products;
+  } catch (error) {
+      console.log(error);
+      throw error; // Rethrow the error for proper error handling ||
+  }
+};
+
+// Edit a product that was found by a sku
+const editProduct = async (data) => {
+    try {
+        let pool = await sql.connect(config);
+        let query = ``
+    }
+    catch (error) {
+        console.log("Fail to edit: ", error)
+    }
+}
+
+
+
+  
+// Get all Catgory based on manufacturer
+const getCategoryOnManufacturer = async(manufacturer)=>{
+  try {
+    let pool = await sql.connect(config);
+    let query = `
+    SELECT 
+        p.ProductID
+        ,p.Name as ProductName
+        ,p.SKU
+        ,p.SEAltText as ShortDescription
+        ,c.Name as CategoryName
+        ,m.Name as ManufacturerName
+    FROM Product as p
+      inner join ProductCategory as pc
+      on p.ProductID = pc.ProductID
+      inner join Category as c
+      on c.CategoryID = pc.CategoryID
+      inner join ProductManufacturer as pm
+      on pm.ProductID = p.ProductID
+      inner join Manufacturer as m
+      on m.ManufacturerID = pm.ManufacturerID
+      where m.Name = @manufacturer and m.Deleted = 0
+    `;
+    // Execute the query
+    let results = await pool.request()
+    .input('manufacturer', sql.NVarChar, `${manufacturer}`) // Using parameterized query and applying wildcards to the parameter
+    .query(query);
+
+    let products = results.recordset;
+
+    // Close the connection
+    await sql.close();
+
+    // Return the result
+    return products
+  } catch (error) {
+    console.log("Fail to retrieve manufacturers: ", error);
+    // Close the connection in case of an error
+    await sql.close();
+    // Optionally, you can throw the error for the calling code to handle
+    throw error;
+  }
+  }
+
+
+// Get All Products Based on a Category
+const getAllProductsCategory = async()=>{
+  try {
+    let pool = await sql.connect(config);
+    let query = `
+    SELECT distinct
+      CategoryID,
+      Name,
+      HierarchyName
+    FROM Category
+    `;
+
+    // Execute the query
+    let results = await pool.request()
+    .query(query);
+
+    let products = results.recordset;
+    // Close the connection
+    await sql.close();
+
+    // Return the result
+    return products
+  } catch (error) {
+    console.log("Fail to retrieve categories: ", error);
+    // Close the connection in case of an error
+    await sql.close();
+    // Optionally, you can throw the error for the calling code to handle
+    throw error;
+  }
+  }
+
+
+
+
+
   module.exports = {
     getAllProducts,
     editProduct,
@@ -603,7 +657,8 @@ const getProductsOnCategory = async(category, manufacturer)=>{
     getCategoryOnManufacturer,
     getProductsOnCategory,
     getAllProductsBasedOnManfacturerAndDescription,
-    getAllProductsCategory
+    getAllProductsCategory,
+    getSupplierBasedOnCategoryAndManu,
   };
 // Get all products  //
 // const writeFileAsync = util.promisify(fs.writeFile);

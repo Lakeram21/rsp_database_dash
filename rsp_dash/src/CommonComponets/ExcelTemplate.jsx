@@ -1,11 +1,12 @@
-import React,{useState} from 'react'
+import React,{useState, useEffect} from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import { exportToExcel } from './ExportExcel';
 
 function ExcelTemplate({filter_headers, fetchedProducts}) {
     const [excelLoading, setExcelLoading] = useState(false)
-    const itemsPerPage = 500; // Number of items to display per page
+    let isExporting = true;
+    const itemsPerPage = 100; // Number of items to display per page
     const [currentPage, setCurrentPage] = useState(1);
 
     const totalPages = Math.ceil(fetchedProducts.length / itemsPerPage);
@@ -14,9 +15,18 @@ function ExcelTemplate({filter_headers, fetchedProducts}) {
 
     const paginatedProducts = fetchedProducts.slice(startIndex, endIndex);
 
-    const exportFile = () =>{
-      exportToExcel(setExcelLoading, excelLoading, fetchedProducts)
-    }
+    const exportFile = () => {
+      try {
+        // Assuming exportToExcel is an asynchronous operation
+        exportToExcel(fetchedProducts);
+    
+        // Reset loading state after export is completed
+      } catch (error) {
+        console.error("Error exporting to Excel:", error);
+      } 
+    };
+    
+   
 
   return (
     <div className="mt-10">
@@ -103,7 +113,9 @@ function ExcelTemplate({filter_headers, fetchedProducts}) {
         <div className='flex justify-between p-2'>
 
           <div className="flex">
-            <button onClick={exportFile}><FontAwesomeIcon icon={faFileExcel} className="text-orange-300 text-4xl"  /></button>
+            <button onClick={exportFile}>
+             <FontAwesomeIcon icon={faFileExcel} className="text-orange-300 text-4xl"  />
+            </button>
           </div>
 
           <div className="flex">
