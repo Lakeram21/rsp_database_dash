@@ -4,31 +4,45 @@ const fs = require("fs");
 const util = require("util");
 const Excel = require("exceljs");
 
-
-const getSupplierBasedOnCategoryAndManu = async(category, manufacturers)=>{
+// Get All 
+const getSupplierBasedOnCategoryAndManu = async (category, manufacturers) => {
   try {
     let pool = await sql.connect(config);
+
+    // Replace spaces in category with wildcards
+    const processedCategory = category.replace(/\s/g, '%');
+
+    // Construct the WHERE condition for category
+    const categoryCondition = `c.HierarchyName LIKE '%${processedCategory}%'`;
+
+    // Construct the WHERE condition for manufacturers if provided
+    const manufacturerCondition = manufacturers
+      ? manufacturers.map(manufacturer => `m.Name LIKE '%${manufacturer}%'`).join(' OR ')
+      : '';
+
+    // Conditionally include manufacturerCondition in the WHERE clause
+    const whereClause = [categoryCondition, manufacturerCondition].filter(Boolean).join(' AND ');
+
     let query = `
-    SELECT
-    c.HierarchyName as [Category Name],
-    d.Name as Supplier,
-    m.Name as Manufacturer
-    FROM
+      SELECT
+        c.HierarchyName as [Category Name],
+        d.Name as Supplier,
+        m.Name as Manufacturer
+      FROM
         RemoteSiteProducts.dbo.Category AS c
-    LEFT JOIN
+      LEFT JOIN
         RemoteSiteProducts.dbo.ProductCategory AS pc ON pc.CategoryID = c.CategoryID
-    LEFT JOIN
+      LEFT JOIN
         RemoteSiteProducts.dbo.ProductManufacturer AS pm ON pm.ProductID = pc.ProductID
-    LEFT JOIN
+      LEFT JOIN
         RemoteSiteProducts.dbo.Manufacturer AS m ON m.ManufacturerID = pm.ManufacturerID
-    LEFT JOIN
+      LEFT JOIN
         RemoteSiteProducts.dbo.ProductDistributor AS pd ON pd.ProductID = pc.ProductID
-    LEFT JOIN
+      LEFT JOIN
         RemoteSiteProducts.dbo.Distributor AS d ON d.DistributorID = pd.DistributorID
-    WHERE
-        c.HierarchyName LIKE '%stainless%steel%enclosure%'
-        AND m.Name LIKE '%' -- Add more specific conditions if possible
-    GROUP BY
+      WHERE
+        ${whereClause}
+      GROUP BY
         c.HierarchyName, d.Name, m.Name;
     `;
 
@@ -48,7 +62,6 @@ const getSupplierBasedOnCategoryAndManu = async(category, manufacturers)=>{
     throw error;
   }
 }
-
 
 // Get All Products Based on a Category
 const getProductsOnCategory = async(category, manufacturer)=>{

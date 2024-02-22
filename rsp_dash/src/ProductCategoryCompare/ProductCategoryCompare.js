@@ -1,35 +1,55 @@
 import React, { useEffect, useState } from 'react';
 import { getAllProductsOnCategory_manufacturer, getAllManufacturer, getAllSupplierOnCategoryNManu } from '../Utils/utils';
+import Select from 'react-select';
 
 function ProductCategoryCompare() {
 
-  const [selectedManufacturers, setSelectedManufacturers] = useState([]);
   const [manufacturers, setManufacturers] = useState([])
   const [category, setCategory] = useState('');
   const [Loading, setLoading] = useState(false)
+  const [selectedManufacturer, setSelectedManufacturer] = useState([]);
 
-  const handleManufacturerChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
-    setSelectedManufacturers(selectedOptions);
-    console.log(selectedManufacturers)
+  // Handle the Manufacturers that are selected on the dropdown
+  const handleSelectChange = (selectedOptions) => {
+    // Extract values from selected options
+  const selectedValues = selectedOptions.map(option => {
+    console.log(option)
+    return option.value});
+
+  // Set the values in the state
+  setSelectedManufacturer(selectedValues);
   };
 
+  // Fecth the supplier based on the form input
   const fetchSupplier = async()=>{
-    const supplierInfo = await getAllSupplierOnCategoryNManu()
-    console.log(supplierInfo)
+    if(category!="" || manufacturers.length > 0 ){
+      const supplierInfo = await getAllSupplierOnCategoryNManu(category, selectedManufacturer)
+      console.log(supplierInfo)
+      const uniqueSuppliers = [...new Set(supplierInfo.map(info => info.Supplier))];
+      console.log(uniqueSuppliers)
+
+    }
+    
   }
+
+  // Get all manufacturers for ther drop down
   const fetchManufacturers = async () => {
     setManufacturers([])
     const fetchedmanufacturers = await getAllManufacturer();
     const sortedManufacturers = fetchedmanufacturers.sort((a, b) => a.Name.localeCompare(b.Name));
 
-    setManufacturers(sortedManufacturers)
+    // Create the options for the multiple select
+    const manufacturerOptions = sortedManufacturers.map((manu) => ({
+      value: manu.Name,
+      label: manu.Name,
+    }));
+
+    setManufacturers(manufacturerOptions)
     // Use the manufacturers data to populate the dropdown
   };
 
   useEffect(() => {
     fetchManufacturers();
-    fetchSupplier();
   }, []);
 
   return (
@@ -44,26 +64,21 @@ function ProductCategoryCompare() {
           onChange={(e) => setCategory(e.target.value)}
         />
            
-        <select
-          className="mt-16 border border-gray-300 px-3 py-2 rounded-md"
-          value={selectedManufacturers}
-          onChange={(e) => handleManufacturerChange(e)}
-          multiple
-        >
-          <option value="">Select Manufacturer</option>
-          {manufacturers?.map((manu) => (
-            <option key={manu.manufacturerID} value={manu.Name}>
-              {manu.Name}
-            </option>
-          ))}
-        </select>
-        
+         <Select
+            defaultValue={[]}
+            isMulti
+            name="manufacturers"
+            options={manufacturers}
+            className="px-3 py-2 rounded-md"
+            classNamePrefix="select"
+            onChange={handleSelectChange}
+          />
         <button
           className="bg-orange-300 text-white px-4 py-2 rounded-md hover:bg-orange-400"
-        //   onClick={getProducts}
+          onClick={fetchSupplier}
           disabled={Loading}
         >
-          {Loading ? 'Loading...' : 'Get Products'}
+          {Loading ? 'Loading...' : 'Find Suppliers'}
         </button>
         
       </div>

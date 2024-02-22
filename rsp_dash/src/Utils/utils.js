@@ -64,13 +64,13 @@ export const getAllManufacturer = async () => {
     }
   };
 
-  export const getAllSupplierOnCategoryNManu = async () => {
+export const getAllSupplierOnCategoryNManu = async (category, manufacturers) => {
     try {
       const response = await fetch('http://localhost:8080/api/supplier', {
         method: 'POST',
         body:JSON.stringify({
-          "category": "Cta",
-          "manufacturers": []
+          "category": category,
+          "manufacturers": manufacturers
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export const getAllManufacturer = async () => {
     }
   };
 
-  export const getAllCategoryOnManufacturer = async (manufacturer) => {
+export const getAllCategoryOnManufacturer = async (manufacturer) => {
     try {
       const response = await fetch(`http://localhost:8080/api//allcategoryonmanufacturer/${manufacturer}`, {
         method: 'GET',
@@ -111,7 +111,7 @@ export const getAllManufacturer = async () => {
   };
   
 
-  export const getAllProductsOnCategory_manufacturer = async (category, manufacturer) => {
+export const getAllProductsOnCategory_manufacturer = async (category, manufacturer) => {
     try {
       console.log(category, manufacturer)
       const url = `http://localhost:8080/api/allproductsoncategories/${encodeURIComponent(category || 'all')}/${encodeURIComponent(manufacturer || 'all')}`;
