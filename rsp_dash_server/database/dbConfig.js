@@ -1,9 +1,12 @@
-const config = {
-    user: "Lakeram",
-    password: "q+;4mG8479kK",
-    server: "138.68.224.200",
+const { config } = require('dotenv');
+config();
+
+const configSQL = {
+    user: process.env.SQL_USER,
+    password:  process.env.SQL_PASS,
+    server: process.env.SQL_SERVER,
     // server: "138.68.224.200",
-    database: "RemoteSiteProducts",
+    database: process.env.SQL_DB_NAME,
    
     options: {
       // trustServerCertificate: true,
@@ -16,5 +19,5 @@ const config = {
     // port: 1433,
   };
   
-  module.exports = config;
+  module.exports = configSQL;
   

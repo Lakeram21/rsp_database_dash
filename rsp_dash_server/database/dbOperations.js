@@ -1,9 +1,10 @@
-const config = require("./dbConfig");
+const configSQL = require("./dbConfig");
 const sql = require("mssql");
 const fs = require("fs");
 const util = require("util");
 const Excel = require("exceljs");
 
+const config = configSQL
 // Get All 
 const getSupplierBasedOnCategoryAndManu = async (category, manufacturers) => {
   try {
