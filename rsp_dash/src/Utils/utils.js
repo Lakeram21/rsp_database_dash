@@ -1,4 +1,79 @@
 
+
+/***************
+ * MONGODB Enpoints
+ * 
+ *******************/
+export const getAllVendorDetails = async()=>{
+  try {
+    const response = await fetch('http://localhost:8080/api/allvendor', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error updating record:', error);
+    throw error; // Re-throw the error for the calling code to handle
+  }
+}
+
+export const createNewVendor = async (newvendorData) => {
+  try {
+    const response = await fetch('http://localhost:8080/api/createvendor', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newvendorData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const responseData = await response.json();
+    console.log(responseData);
+
+  } catch (error) {
+    console.error('Error updating record:', error);
+  }
+};
+
+export const updateVendor = async (id,vendorData) => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/editVendor/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(vendorData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const responseData = await response.json();
+    console.log(responseData);
+    return responseData
+
+  } catch (error) {
+    console.error('Error updating record:', error);
+  }
+};
+
+/****************
+ * SQL Enpoints
+ * 
+ ***************************/
 // This function is used to checjk if the data was edited
 export const checkEdits= (originalData, updatedData, filter, updatedFilter)=>{
     for(const key in originalData){
@@ -18,7 +93,6 @@ export const checkEdits= (originalData, updatedData, filter, updatedFilter)=>{
     }
     return false
 }
-
 
 export const updateRecord = (updatedData, updatedFilters)=> {
     fetch('http://localhost:8080/api/product', {
